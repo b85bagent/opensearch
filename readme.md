@@ -188,9 +188,9 @@ var data model.BulkPrevious
 | key  | string | X |
 | value  | string | X |
 
-> key && value 非必帶，不帶就會回 搜尋的index 的全部資料 (不帶key&value 請用空字串)
-> key 可以帶 \* 會把所有key都帶出，或是 data.url.\* 等方式
-> **key 有帶 value就一定要帶**
+1. key && value 非必帶，不帶就會回 搜尋的index 的全部資料 (不帶key&value 請用空字串)
+2. key 可以帶 \* 會把所有key都帶出，或是 data.url.\* 等方式
+3. **key 有帶 value就一定要帶**
 
 #### code
 
