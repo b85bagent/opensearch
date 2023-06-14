@@ -1,5 +1,11 @@
 # Opensearch Api Usage
 
+## Using
+
+```bash
+go get github.com/b85bagent/opensearch@版本號
+```
+
 ## Create
 
 ### Request
