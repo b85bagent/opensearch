@@ -195,19 +195,13 @@ var data model.BulkPrevious
 #### code
 
 ```go
-os, ok := server.GetServerInstance().GetOpensearch()["One"]
- if !ok {
-  fmt.Println("No OK")
-  return
- }
- //Search key
- result, err := opensearch.Search(os, "lex-test66")
+result, err := opensearch.Search(os, "lex-test14", "", "")
  if err != nil {
-  fmt.Println("No OK")
+  fmt.Println(err)
   return
  }
 
- log.Println(result.Hits.Hits[0].Source)
+ log.Println(result.Hits)
 ```
 
 ### Response
