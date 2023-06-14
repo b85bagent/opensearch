@@ -3,7 +3,8 @@
 ## Using
 
 ```bash
-go get github.com/b85bagent/opensearch@版本號
+go get -u github.com/b85bagent/opensearch@版本號
+go get -u github.com/b85bagent/opensearch@c478316
 ```
 
 ## Create
