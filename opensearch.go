@@ -39,13 +39,13 @@ func CreateIndex(client *opensearch.Client, IndexName string) error {
 
 	createIndexResponse, errCreateIndex := res.Do(context.Background(), client)
 	if errCreateIndex != nil {
-		fmt.Println("failed to create index ", errCreateIndex)
+		log.Println("failed to create index ", errCreateIndex)
 		return errCreateIndex
 	}
 
 	defer createIndexResponse.Body.Close()
 
-	fmt.Println(createIndexResponse)
+	log.Println(createIndexResponse)
 	return nil
 }
 
@@ -57,13 +57,13 @@ func SingleInsert(client *opensearch.Client, index, document string) error {
 	}
 	insertResponse, err := req.Do(context.Background(), client.Transport)
 	if err != nil {
-		fmt.Println("failed to insert document: ", err)
+		log.Println("failed to insert document: ", err)
 		return err
 	}
 	defer insertResponse.Body.Close()
 
-	fmt.Println(insertResponse)
-	fmt.Println("add success")
+	log.Println(insertResponse)
+	log.Println("add success")
 	return nil
 }
 
@@ -75,12 +75,12 @@ func SingleDeleteIndex(client *opensearch.Client, index []string) error {
 
 	deleteIndexResponse, errDeleteIndex := deleteIndex.Do(context.Background(), client.Transport)
 	if errDeleteIndex != nil {
-		fmt.Println("failed to delete index ", errDeleteIndex)
+		log.Println("failed to delete index ", errDeleteIndex)
 		return errDeleteIndex
 	}
 	defer deleteIndexResponse.Body.Close()
 
-	fmt.Println(deleteIndexResponse)
+	log.Println(deleteIndexResponse)
 
 	return nil
 
@@ -112,14 +112,14 @@ func Search(client *opensearch.Client, Index, key, value string) (result SearchR
 		}
 	}
 
-	// fmt.Println(res.StatusCode)
+	// log.Println(res.StatusCode)
 	if res.StatusCode > 299 {
 		var errorResult SearchErrorResponse
 		json.NewDecoder(res.Body).Decode(&errorResult)
 		return result, errors.New(errorResult.Error.Reason)
 	}
 
-	log.Printf("response: [%+v]", res)
+	// log.Printf("search response: [%+v]", res)
 
 	json.NewDecoder(res.Body).Decode(&result)
 
@@ -229,8 +229,6 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 		}
 	}
 
-	fmt.Println(buf.String())
-
 	return buf.String(), nil
 
 }
@@ -255,8 +253,6 @@ func BulkUpdate(index, id string, data InsertData) (result string, err error) {
 		}
 	}
 
-	fmt.Println(buf.String())
-
 	return buf.String(), nil
 
 }
@@ -264,10 +260,10 @@ func BulkUpdate(index, id string, data InsertData) (result string, err error) {
 //Bulk Execute
 func BulkExecute(client *opensearch.Client, documents string) (result *opensearchapi.Response, err error) {
 
-	// fmt.Println("documents: ", documents)
+	// log.Println("documents: ", documents)
 	blk, errBulk := client.Bulk(strings.NewReader(documents))
 	if errBulk != nil {
-		fmt.Println("failed to perform bulk operations", errBulk)
+		log.Println("failed to perform bulk operations", errBulk)
 		return nil, errBulk
 	}
 
