@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"log"
 	"strings"
 
@@ -127,56 +126,63 @@ func Search(client *opensearch.Client, Index, key, value string) (result SearchR
 	return result, nil
 }
 
-func BulkPrevious(client *opensearch.Client, mode string, data BulkPreviousUse) error {
+func BulkPrevious(client *opensearch.Client, mode string, data BulkPreviousUse) (result *opensearchapi.Response, err error) {
 
 	switch mode {
 	case "create":
 		if data.Create.Data == nil || data.Create.Index == "" {
 			errCreateData := errors.New("create issue is illegal,please check it ")
-			return errCreateData
+			return nil, errCreateData
 		}
-		result, errCreate := BulkCreate(data.Create.Index, data.Create.Data)
+		createData, errCreate := BulkCreate(data.Create.Index, data.Create.Data)
 		if errCreate != nil {
-			return errCreate
+			return nil, errCreate
 		}
 
-		if errExecute := BulkExecute(client, result); errExecute != nil {
-			return errExecute
+		result, errExecute := BulkExecute(client, createData)
+		if errExecute != nil {
+			return nil, errExecute
 		}
+
+		return result, nil
 
 	case "update":
 		if data.Update.Id == "" || data.Update.Index == "" || len(data.Update.Data.Data) == 0 {
-			errCreateData := errors.New("update issue is illegal,please check it ")
-			return errCreateData
+			errUpdateData := errors.New("update issue is illegal,please check it ")
+			return nil, errUpdateData
 		}
-		result, errCreate := BulkUpdate(data.Update.Index, data.Update.Id, data.Update.Data)
-		if errCreate != nil {
-			return errCreate
+		updateData, errUpdate := BulkUpdate(data.Update.Index, data.Update.Id, data.Update.Data)
+		if errUpdate != nil {
+			return nil, errUpdate
 		}
 
-		if errExecute := BulkExecute(client, result); errExecute != nil {
-			return errExecute
+		result, errExecute := BulkExecute(client, updateData)
+		if errExecute != nil {
+			return nil, errExecute
 		}
+
+		return result, nil
+
 	case "delete":
 		if len(data.Delete) == 0 {
-			errCreateData := errors.New("delete issue is illegal,please check it")
-			return errCreateData
+			errDeleteData := errors.New("delete issue is illegal,please check it")
+			return nil, errDeleteData
 		}
-		result, errCreate := BulkDelete(data.Delete)
-		if errCreate != nil {
-			return errCreate
+		deleteData, errDelete := BulkDelete(data.Delete)
+		if errDelete != nil {
+			return nil, errDelete
 		}
 
-		if errExecute := BulkExecute(client, result); errExecute != nil {
-			return errExecute
+		result, errExecute := BulkExecute(client, deleteData)
+		if errExecute != nil {
+			return nil, errExecute
 		}
+
+		return result, nil
+
 	default:
-		return errors.New("invalid mode")
+		return nil, errors.New("invalid mode")
 	}
-
-	fmt.Println("BulkPrevious End")
-
-	return nil
 
 }
 
@@ -256,21 +262,16 @@ func BulkUpdate(index, id string, data InsertData) (result string, err error) {
 }
 
 //Bulk Execute
-func BulkExecute(client *opensearch.Client, documents string) error {
+func BulkExecute(client *opensearch.Client, documents string) (result *opensearchapi.Response, err error) {
 
 	// fmt.Println("documents: ", documents)
-
 	blk, errBulk := client.Bulk(strings.NewReader(documents))
-	defer blk.Body.Close()
-
 	if errBulk != nil {
 		fmt.Println("failed to perform bulk operations", errBulk)
-		return errBulk
+		return nil, errBulk
 	}
-	defer blk.Body.Close()
 
-	fmt.Println("Performing bulk operations")
-	fmt.Println(blk)
+	defer blk.Body.Close()
 
 	if blk.IsError() {
 		var errBulk BulkError
@@ -278,28 +279,8 @@ func BulkExecute(client *opensearch.Client, documents string) error {
 		json.NewDecoder(blk.Body).Decode(&errBulk)
 
 		errBody := errors.New(errBulk.Error.Reason)
-		return errBody
+		return nil, errBody
 	}
 
-	body, errReadAll := io.ReadAll(blk.Body)
-	if errReadAll != nil {
-		log.Printf("error occurred: [%s]", errReadAll.Error())
-		return errReadAll
-	}
-
-	var response BulkCreateResponse
-	if errUnmarshal := json.Unmarshal(body, &response); errUnmarshal != nil {
-		log.Printf("error Unmarshal blkResponse: [%s]", errUnmarshal.Error())
-		return errUnmarshal
-	}
-
-	for _, item := range response.Items {
-		if item.Create.Status > 299 {
-			log.Printf("error occurred: [%s]", item.Create.Result)
-		} else {
-			log.Printf("success: [%s]", item.Create.Index)
-		}
-	}
-
-	return nil
+	return blk, nil
 }
