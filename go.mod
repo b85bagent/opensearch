@@ -1,4 +1,4 @@
-module opensearch
+module github.com/b85bagent/opensearch
 
 go 1.18
 
