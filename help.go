@@ -2,7 +2,6 @@ package opensearch
 
 import (
 	"encoding/json"
-	"log"
 	"time"
 )
 
@@ -15,8 +14,6 @@ func dataMix(data []interface{}, Action any, ContentDetail any) []interface{} {
 
 	data = append(data, Action)
 	data = append(data, ContentDetail)
-
-	log.Println("data2: ", data)
 
 	return data
 }
