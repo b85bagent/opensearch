@@ -124,7 +124,7 @@ type ContentDetail struct {
 
 type InsertData struct {
 	Timestamp string          `json:"@timestamp"`
-	Data      json.RawMessage `json:"-"`
+	Data      json.RawMessage `json:"data"`
 }
 
 type UpdateData struct {
