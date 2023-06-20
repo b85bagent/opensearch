@@ -1,6 +1,7 @@
 package opensearch
 
 import (
+	"encoding/json"
 	"log"
 	"time"
 )
@@ -27,7 +28,8 @@ func actionCreate(index string) ActionCreate {
 func contentDetailCreate(data map[string]interface{}) InsertData {
 	t := time.Now()
 	timestamp := t.Format("2006-01-02T15:04:05.000Z")
-	return InsertData{Data: data, Timestamp: timestamp}
+	dataBytes, _ := json.Marshal(data)
+	return InsertData{Data: json.RawMessage(dataBytes), Timestamp: timestamp}
 }
 
 func actionDelete(index, id string) ActionDelete {

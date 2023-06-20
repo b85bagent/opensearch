@@ -1,6 +1,9 @@
 package opensearch
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type SearchResponse struct {
 	Took     int  `json:"took"`
@@ -120,8 +123,8 @@ type ContentDetail struct {
 }
 
 type InsertData struct {
-	Timestamp string                 `json:"@timestamp"`
-	Data      map[string]interface{} `json:"-"`
+	Timestamp string          `json:"@timestamp"`
+	Data      json.RawMessage `json:"-"`
 }
 
 type UpdateData struct {
