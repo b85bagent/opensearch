@@ -228,7 +228,7 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 			return "", errEncode
 		}
 	}
-
+	log.Println("buf.String(): ", buf.String())
 	return buf.String(), nil
 
 }
