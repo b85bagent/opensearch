@@ -1,8 +1,20 @@
 package opensearch
 
+import "time"
+
+type opensearchM struct {
+	timestamp time.Time `json:"@timestamp"`
+	source    any       `json:"_source"`
+}
+
 func dataMix(data []interface{}, Action any, ContentDetail any) []interface{} {
 	data = append(data, Action)
-	data = append(data, ContentDetail)
+
+	r := opensearchM{}
+	r.source = ContentDetail
+	r.timestamp = time.Now()
+
+	data = append(data, r)
 
 	return data
 }
