@@ -147,7 +147,7 @@ func BulkPrevious(client *opensearch.Client, mode string, data BulkPreviousUse) 
 		return result, nil
 
 	case "update":
-		if data.Update.Id == "" || data.Update.Index == "" || len(data.Update.Data.Data) == 0 {
+		if data.Update.Id == "" || data.Update.Index == "" || len(data.Update.Data.Source) == 0 {
 			errUpdateData := errors.New("update issue is illegal,please check it ")
 			return nil, errUpdateData
 		}

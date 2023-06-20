@@ -121,7 +121,7 @@ type ContentDetail struct {
 
 type InsertData struct {
 	Timestamp string                 `json:"@timestamp"`
-	Data      map[string]interface{} `json:"data"`
+	Source    map[string]interface{} `json:"_source"`
 }
 
 type UpdateData struct {
