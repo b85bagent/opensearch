@@ -12,15 +12,15 @@ type opensearchM struct {
 
 func dataMix(data []interface{}, Action any, ContentDetail any) []interface{} {
 	data = append(data, Action)
-	log.Println("data1: ", data)
-	r := opensearchM{}
-	r.source = ContentDetail
-	r.timestamp = time.Now()
+	// log.Println("data1: ", data)
+	// r := opensearchM{}
+	// r.source = ContentDetail
+	// r.timestamp = time.Now()
 
-	log.Println("rt: ", r.timestamp)
-	log.Println("r: ", r)
+	// log.Println("rt: ", r.timestamp)
+	// log.Println("r: ", r)
 
-	data = append(data, r)
+	data = append(data, ContentDetail)
 
 	log.Println("data2: ", data)
 
