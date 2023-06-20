@@ -32,7 +32,9 @@ func actionCreate(index string) ActionCreate {
 }
 
 func contentDetailCreate(data map[string]interface{}) InsertData {
-	return InsertData{Data: data, Timestamp: time.Now().String()}
+	t := time.Now()
+	timestamp := t.Format("2006-01-02T15:04:05.000Z")
+	return InsertData{Data: data, Timestamp: timestamp}
 }
 
 func actionDelete(index, id string) ActionDelete {
