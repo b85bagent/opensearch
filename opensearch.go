@@ -215,9 +215,11 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 
 	Action := actionCreate(index)
 
-	// ContentDetail1 := contentDetailCreate(data)
+	ContentDetail1 := contentDetailCreate(data)
 
-	r = dataMix(r, Action, data)
+	r = dataMix(r, Action, ContentDetail1)
+
+	fmt.Println(r)
 
 	buf := &bytes.Buffer{}
 	enc := json.NewEncoder(buf)
@@ -228,7 +230,9 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 			return "", errEncode
 		}
 	}
+
 	log.Println("buf.String(): ", buf.String())
+
 	return buf.String(), nil
 
 }

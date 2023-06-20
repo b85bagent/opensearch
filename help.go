@@ -16,7 +16,10 @@ func dataMix(data []interface{}, Action any, ContentDetail any) []interface{} {
 	r := opensearchM{}
 	r.source = ContentDetail
 	r.timestamp = time.Now()
+
+	log.Println("rt: ", r.timestamp)
 	log.Println("r: ", r)
+
 	data = append(data, r)
 
 	log.Println("data2: ", data)
@@ -29,7 +32,7 @@ func actionCreate(index string) ActionCreate {
 }
 
 func contentDetailCreate(data map[string]interface{}) InsertData {
-	return InsertData{Data: data}
+	return InsertData{Data: data, Timestamp: time.Now().String()}
 }
 
 func actionDelete(index, id string) ActionDelete {
