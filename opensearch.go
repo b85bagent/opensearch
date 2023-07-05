@@ -216,26 +216,26 @@ func removeMapKey(c InsertData) (r string) {
 	var data map[string]interface{}
 
 	if err := json.Unmarshal(dataBytes, &data); err != nil {
-		fmt.Println("JSON 解析錯誤：", err)
+		log.Println("JSON 解析錯誤：", err)
 		return
 	}
 
 	dataValue, ok := data["data"]
 	if !ok {
-		fmt.Println("未找到 'data' key")
+		log.Println("未找到 'data' key")
 		return
 	}
 
 	r1, err := json.Marshal(dataValue)
 	if err != nil {
-		fmt.Println("JSON 編碼錯誤：", err)
+		log.Println("JSON 編碼錯誤：", err)
 		return
 	}
 
 	var data2 map[string]interface{}
 
 	if err := json.Unmarshal(r1, &data2); err != nil {
-		fmt.Println("JSON 解析錯誤：", err)
+		log.Println("JSON 解析錯誤：", err)
 		return
 	}
 
@@ -243,11 +243,9 @@ func removeMapKey(c InsertData) (r string) {
 
 	result, err := json.Marshal(data2)
 	if err != nil {
-		fmt.Println("JSON 編碼錯誤：", err)
+		log.Println("JSON 編碼錯誤：", err)
 		return
 	}
-
-	log.Println(result)
 
 	return string(result)
 
@@ -262,26 +260,17 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 	ContentDetail1 := contentDetailCreate(data)
 
 	c := removeMapKey(ContentDetail1)
-	log.Println("c: ", c)
+	// log.Println("c: ", c)
 
 	r = dataMix(r, Action, c)
-	log.Println("r: ", r)
+	// log.Println("r: ", r)
 
-	// buf := &bytes.Buffer{}
-	// enc := json.NewEncoder(buf)
-
-	// for _, v := range r {
-	// 	if errEncode := enc.Encode(v); errEncode != nil {
-	// 		log.Fatal(err)
-	// 		return "", errEncode
-	// 	}
-	// }
 	buf := &bytes.Buffer{}
 
 	for _, v := range r {
 		jsonBytes, err := json.Marshal(v)
 		if err != nil {
-			fmt.Println("JSON 編碼錯誤：", err)
+			log.Println("JSON 編碼錯誤：", err)
 			return "", err
 		}
 		// 移除反斜線
@@ -294,7 +283,7 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 		buf.WriteByte('\n')
 	}
 
-	log.Println("buf.String(): ", buf.String())
+	// log.Println("buf.String(): ", buf.String())
 
 	return buf.String(), nil
 
