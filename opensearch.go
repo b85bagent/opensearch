@@ -284,7 +284,9 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 			fmt.Println("JSON 編碼錯誤：", err)
 			return "", err
 		}
-		buf.Write(jsonBytes)
+		// 移除反斜線
+		jsonString := strings.Replace(string(jsonBytes), "\\", "", -1)
+		buf.WriteString(jsonString)
 		buf.WriteByte('\n')
 	}
 
