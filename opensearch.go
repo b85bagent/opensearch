@@ -264,7 +264,7 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 	c := removeMapKey(ContentDetail1)
 	log.Println("c: ", c)
 
-	r = dataMix(r, Action, ContentDetail1)
+	r = dataMix(r, Action, c)
 
 	buf := &bytes.Buffer{}
 	enc := json.NewEncoder(buf)
