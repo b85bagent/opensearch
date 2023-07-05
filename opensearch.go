@@ -267,14 +267,25 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 	r = dataMix(r, Action, c)
 	log.Println("r: ", r)
 
+	// buf := &bytes.Buffer{}
+	// enc := json.NewEncoder(buf)
+
+	// for _, v := range r {
+	// 	if errEncode := enc.Encode(v); errEncode != nil {
+	// 		log.Fatal(err)
+	// 		return "", errEncode
+	// 	}
+	// }
 	buf := &bytes.Buffer{}
-	enc := json.NewEncoder(buf)
 
 	for _, v := range r {
-		if errEncode := enc.Encode(v); errEncode != nil {
-			log.Fatal(err)
-			return "", errEncode
+		jsonBytes, err := json.Marshal(v)
+		if err != nil {
+			fmt.Println("JSON 編碼錯誤：", err)
+			return "", err
 		}
+		buf.Write(jsonBytes)
+		buf.WriteByte('\n')
 	}
 
 	log.Println("buf.String(): ", buf.String())
