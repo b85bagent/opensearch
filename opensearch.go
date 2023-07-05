@@ -238,7 +238,7 @@ func removeMapKey(c InsertData) (r string) {
 		return
 	}
 
-	data2["timestamp"] = "2023-07-05T12:34:56Z"
+	data2["timestamp"] = c.Timestamp
 
 	result, err := json.Marshal(data2)
 	if err != nil {
