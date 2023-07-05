@@ -209,6 +209,49 @@ func BulkDelete(Delete map[string]string) (result string, err error) {
 
 }
 
+func removeMapKey(c InsertData) (r string) {
+	dataBytes, _ := json.Marshal(c)
+
+	var data map[string]interface{}
+
+	if err := json.Unmarshal(dataBytes, &data); err != nil {
+		fmt.Println("JSON 解析錯誤：", err)
+		return
+	}
+
+	dataValue, ok := data["data"]
+	if !ok {
+		fmt.Println("未找到 'data' key")
+		return
+	}
+
+	r1, err := json.Marshal(dataValue)
+	if err != nil {
+		fmt.Println("JSON 編碼錯誤：", err)
+		return
+	}
+
+	var data2 map[string]interface{}
+
+	if err := json.Unmarshal(r1, &data2); err != nil {
+		fmt.Println("JSON 解析錯誤：", err)
+		return
+	}
+
+	data2["timestamp"] = "2023-07-05T12:34:56Z"
+
+	result, err := json.Marshal(data2)
+	if err != nil {
+		fmt.Println("JSON 編碼錯誤：", err)
+		return
+	}
+
+	log.Println(result)
+
+	return string(result)
+
+}
+
 func BulkCreate(index string, data map[string]interface{}) (result string, err error) {
 
 	r := []interface{}{}
@@ -216,6 +259,10 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 	Action := actionCreate(index)
 
 	ContentDetail1 := contentDetailCreate(data)
+	log.Println("ContentDetail: ", ContentDetail1)
+
+	c := removeMapKey(ContentDetail1)
+	log.Println("c: ", c)
 
 	r = dataMix(r, Action, ContentDetail1)
 
