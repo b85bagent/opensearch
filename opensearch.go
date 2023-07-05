@@ -286,6 +286,10 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 		}
 		// 移除反斜線
 		jsonString := strings.Replace(string(jsonBytes), "\\", "", -1)
+		// 移除前後的雙引號
+		jsonString = strings.TrimPrefix(jsonString, `"`)
+		jsonString = strings.TrimSuffix(jsonString, `"`)
+
 		buf.WriteString(jsonString)
 		buf.WriteByte('\n')
 	}
