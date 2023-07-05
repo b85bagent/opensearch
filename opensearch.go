@@ -138,7 +138,6 @@ func BulkPrevious(client *opensearch.Client, mode string, data BulkPreviousUse) 
 		if errCreate != nil {
 			return nil, errCreate
 		}
-		log.Println("createData", createData)
 
 		result, errExecute := BulkExecute(client, createData)
 		if errExecute != nil {
