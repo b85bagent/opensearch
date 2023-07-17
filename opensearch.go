@@ -257,8 +257,6 @@ func removeMapKeyRemoteWrite(c InsertData) (r string) {
 
 	var data map[string]interface{}
 
-	log.Println("dataBytes: ", string(dataBytes))
-
 	if err := json.Unmarshal(dataBytes, &data); err != nil {
 		log.Println("JSON 解析錯誤：", err)
 		return
@@ -422,7 +420,6 @@ func BulkExecute(client *opensearch.Client, documents string) (result *opensearc
 		return nil, errBulk
 	}
 
-	log.Println(blk)
 	if blk.IsError() {
 		var errBulk BulkError
 
