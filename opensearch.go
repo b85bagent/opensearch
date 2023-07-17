@@ -283,14 +283,13 @@ func removeMapKeyRemoteWrite(c InsertData) (r string) {
 		return
 	}
 
-	existTimeStamp := gjson.Get(string(dataBytes), "data.samples.timestamp")
+	existTimeStamp := gjson.Get(string(dataBytes), "data.samples.0.timestamp")
 	if existTimeStamp.Exists() {
 		timestampMillis := existTimeStamp.Int()                            // 獲取時間戳（毫秒）
 		timestamp := time.Unix(0, timestampMillis*int64(time.Millisecond)) // 將時間戳轉換為time.Time
 		formattedTimestamp := timestamp.Format("2006-01-02T15:04:05.000Z") // 將時間格式化為ISO 8601
 		data2["@timestamp"] = formattedTimestamp
 	} else {
-
 		data2["@timestamp"] = c.Timestamp
 	}
 
@@ -413,8 +412,6 @@ func BulkExecute(client *opensearch.Client, documents string) (result *opensearc
 		log.Println("failed to perform bulk operations", errBulk)
 		return nil, errBulk
 	}
-
-	log.Println(blk)
 
 	if blk.IsError() {
 		var errBulk BulkError
