@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/opensearch-project/opensearch-go"
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
+	"github.com/tidwall/gjson"
 )
 
 //建立Index
@@ -238,7 +240,59 @@ func removeMapKey(c InsertData) (r string) {
 		return
 	}
 
-	data2["timestamp"] = c.Timestamp
+	data2["@timestamp"] = c.Timestamp
+
+	result, err := json.Marshal(data2)
+	if err != nil {
+		log.Println("JSON 編碼錯誤：", err)
+		return
+	}
+
+	return string(result)
+
+}
+
+func removeMapKeyRemoteWrite(c InsertData) (r string) {
+	dataBytes, _ := json.Marshal(c)
+
+	var data map[string]interface{}
+
+	log.Println("dataBytes: ", string(dataBytes))
+
+	if err := json.Unmarshal(dataBytes, &data); err != nil {
+		log.Println("JSON 解析錯誤：", err)
+		return
+	}
+
+	dataValue, ok := data["data"]
+	if !ok {
+		log.Println("未找到 'data' key")
+		return
+	}
+
+	r1, err := json.Marshal(dataValue)
+	if err != nil {
+		log.Println("JSON 編碼錯誤：", err)
+		return
+	}
+
+	var data2 map[string]interface{}
+
+	if err := json.Unmarshal(r1, &data2); err != nil {
+		log.Println("JSON 解析錯誤：", err)
+		return
+	}
+
+	existTimeStamp := gjson.Get(string(dataBytes), "data.samples.timestamp")
+	if existTimeStamp.Exists() {
+		timestampMillis := existTimeStamp.Int()                            // 獲取時間戳（毫秒）
+		timestamp := time.Unix(0, timestampMillis*int64(time.Millisecond)) // 將時間戳轉換為time.Time
+		formattedTimestamp := timestamp.Format("2006-01-02T15:04:05.000Z") // 將時間格式化為ISO 8601
+		data2["@timestamp"] = formattedTimestamp
+	} else {
+
+		data2["@timestamp"] = c.Timestamp
+	}
 
 	result, err := json.Marshal(data2)
 	if err != nil {
@@ -259,6 +313,44 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 	ContentDetail1 := contentDetailCreate(data)
 
 	c := removeMapKey(ContentDetail1)
+	// log.Println("c: ", c)
+
+	r = dataMix(r, Action, c)
+	// log.Println("r: ", r)
+
+	buf := &bytes.Buffer{}
+
+	for _, v := range r {
+		jsonBytes, err := json.Marshal(v)
+		if err != nil {
+			log.Println("JSON 編碼錯誤：", err)
+			return "", err
+		}
+		// 移除反斜線
+		jsonString := strings.Replace(string(jsonBytes), "\\", "", -1)
+		// 移除前後的雙引號
+		jsonString = strings.TrimPrefix(jsonString, `"`)
+		jsonString = strings.TrimSuffix(jsonString, `"`)
+
+		buf.WriteString(jsonString)
+		buf.WriteByte('\n')
+	}
+
+	// log.Println("buf.String(): ", buf.String())
+
+	return buf.String(), nil
+
+}
+
+func BulkCreateRemoteWrite(index string, data map[string]interface{}) (result string, err error) {
+
+	r := []interface{}{}
+
+	Action := actionCreate(index)
+
+	ContentDetail1 := contentDetailCreate(data)
+
+	c := removeMapKeyRemoteWrite(ContentDetail1)
 	// log.Println("c: ", c)
 
 	r = dataMix(r, Action, c)
