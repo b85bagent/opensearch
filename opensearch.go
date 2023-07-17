@@ -286,8 +286,10 @@ func removeMapKeyRemoteWrite(c InsertData) (r string) {
 	existTimeStamp := gjson.Get(string(dataBytes), "data.samples.0.timestamp")
 	if existTimeStamp.Exists() {
 		log.Println("existTimeStamp: ", existTimeStamp)
-		timestampMillis := existTimeStamp.Int()                            // 獲取時間戳（毫秒）
-		timestamp := time.Unix(0, timestampMillis*int64(time.Millisecond)) // 將時間戳轉換為time.Time
+		timestampMillis := existTimeStamp.Int() // 獲取時間戳（毫秒）
+		timestampSeconds := timestampMillis / 1000
+		timestamp := time.Unix(0, timestampSeconds*int64(time.Millisecond)) // 將時間戳轉換為time.Time
+		log.Println("timestamp: ", timestamp)
 		formattedTimestamp := timestamp.Format("2006-01-02T15:04:05.000Z") // 將時間格式化為ISO 8601
 		data2["@timestamp"] = formattedTimestamp
 	} else {
@@ -300,7 +302,7 @@ func removeMapKeyRemoteWrite(c InsertData) (r string) {
 		return
 	}
 
-	log.Println("data result: ", result)
+	log.Println("data result: ", string(result))
 
 	return string(result)
 
