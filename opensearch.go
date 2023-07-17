@@ -414,6 +414,8 @@ func BulkExecute(client *opensearch.Client, documents string) (result *opensearc
 		return nil, errBulk
 	}
 
+	log.Println(blk)
+
 	if blk.IsError() {
 		var errBulk BulkError
 
