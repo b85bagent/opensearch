@@ -283,14 +283,20 @@ func removeMapKeyRemoteWrite(c InsertData) (r string) {
 		return
 	}
 
+	location, err := time.LoadLocation("UTC")
+	if err != nil {
+		log.Println("Error loading time zone:", err)
+		return
+	}
+
 	existTimeStamp := gjson.Get(string(dataBytes), "data.samples.0.timestamp")
 	if existTimeStamp.Exists() {
 		log.Println("existTimeStamp: ", existTimeStamp)
 		timestampMillis := existTimeStamp.Int() // 獲取時間戳（毫秒）
 		timestampSeconds := timestampMillis / 1000
-		timestamp := time.Unix(timestampSeconds, 0)
+		timestamp := time.Unix(timestampSeconds, 0).In(location)
 		formattedTimestamp := timestamp.Format("2006-01-02T15:04:05.000Z")
-		log.Println("timestamp: ", timestamp)
+		log.Println("timestamp:", timestamp)
 		data2["@timestamp"] = formattedTimestamp
 	} else {
 		data2["@timestamp"] = c.Timestamp
