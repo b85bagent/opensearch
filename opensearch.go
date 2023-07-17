@@ -288,9 +288,9 @@ func removeMapKeyRemoteWrite(c InsertData) (r string) {
 		log.Println("existTimeStamp: ", existTimeStamp)
 		timestampMillis := existTimeStamp.Int() // 獲取時間戳（毫秒）
 		timestampSeconds := timestampMillis / 1000
-		timestamp := time.Unix(0, timestampSeconds*int64(time.Millisecond)) // 將時間戳轉換為time.Time
+		timestamp := time.Unix(timestampSeconds, 0)
+		formattedTimestamp := timestamp.Format("2006-01-02T15:04:05.000Z")
 		log.Println("timestamp: ", timestamp)
-		formattedTimestamp := timestamp.Format("2006-01-02T15:04:05.000Z") // 將時間格式化為ISO 8601
 		data2["@timestamp"] = formattedTimestamp
 	} else {
 		data2["@timestamp"] = c.Timestamp
