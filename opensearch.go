@@ -298,7 +298,7 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 		formattedTimestamp := timestamp.Format("2006-01-02T15:04:05.000Z")
 		data2["@timestamp"] = formattedTimestamp
 	} else {
-		data2["@timestamp"] = c.Timestamp
+		data2["@timestamp"] = time.Now().Format("2006-01-02T15:04:05.000Z")
 	}
 
 	result, errMarshal2 := json.Marshal(data2)
