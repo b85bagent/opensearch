@@ -274,6 +274,8 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 	var data map[string]interface{}
 
 	if errUnmarshal := json.Unmarshal(dataBytes, &data); errUnmarshal != nil {
+		log.Println("removeMapKeyRemoteWrite Unmarshal error: ", errUnmarshal)
+
 		return "", errUnmarshal
 	}
 
@@ -284,17 +286,21 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 
 	r1, errMarshal := json.Marshal(dataValue)
 	if errMarshal != nil {
+		log.Println("removeMapKeyRemoteWrite Marshal error: ", errMarshal)
+
 		return "", errMarshal
 	}
 
 	var data2 map[string]interface{}
 
 	if errUnmarshal2 := json.Unmarshal(r1, &data2); errUnmarshal2 != nil {
+		log.Println("removeMapKeyRemoteWrite Unmarshal2 error: ", errUnmarshal2)
 		return "", errUnmarshal2
 	}
 
 	location, errLocation := time.LoadLocation("UTC")
 	if errLocation != nil {
+		log.Println("removeMapKeyRemoteWrite errLocation error: ", errLocation)
 		return "", errLocation
 	}
 
@@ -311,6 +317,8 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 
 	result, errMarshal2 := json.Marshal(data2)
 	if errMarshal2 != nil {
+		log.Println("removeMapKeyRemoteWrite Marshal2 error: ", errMarshal2)
+
 		return "", errMarshal2
 	}
 
@@ -361,6 +369,8 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 func BulkCreateRemoteWrite(index string, data map[string]interface{}) (result string, err error) {
 
 	if len(data) == 0 {
+		log.Println("BulkCreateRemoteWrite data 0")
+
 		return "", errors.New("missing data format")
 	}
 
