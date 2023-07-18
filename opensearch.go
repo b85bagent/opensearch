@@ -345,6 +345,10 @@ func BulkCreate(index string, data map[string]interface{}) (result string, err e
 
 func BulkCreateRemoteWrite(index string, data map[string]interface{}) (result string, err error) {
 
+	if len(data) == 0 {
+		return "", errors.New("missing data format")
+	}
+
 	r := []interface{}{}
 
 	Action := actionCreate(index)
