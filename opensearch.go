@@ -255,8 +255,16 @@ func removeMapKey(c InsertData) (r string) {
 func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 
 	defer func() {
-		log.Println("panic_InsertData: ", c.Data, c.Timestamp)
 		if r := recover(); r != nil {
+
+			var data map[string]interface{}
+
+			if err := json.Unmarshal(c.Data, &data); err != nil {
+				log.Fatal(err)
+			}
+
+			log.Println("panic_InsertData: ", data, c.Timestamp)
+
 			fmt.Println("Recovered from panic in processInsert, ", r)
 		}
 	}()
