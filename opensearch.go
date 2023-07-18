@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"runtime/debug"
 	"strings"
 	"time"
 
@@ -297,8 +296,6 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 		timestamp := time.Unix(timestampSeconds, 0).In(location)
 		formattedTimestamp := timestamp.Format("2006-01-02T15:04:05.000Z")
 		data2["@timestamp"] = formattedTimestamp
-	} else {
-		data2["@timestamp"] = time.Now().Format("2006-01-02T15:04:05.000Z")
 	}
 
 	result, errMarshal2 := json.Marshal(data2)
@@ -316,7 +313,6 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 
 			fmt.Println("Recovered from panic in processInsert, ", r)
 
-			debug.PrintStack()
 			return
 		}
 	}()
