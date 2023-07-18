@@ -252,39 +252,35 @@ func removeMapKey(c InsertData) (r string) {
 
 }
 
-func removeMapKeyRemoteWrite(c InsertData) (r string) {
+func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
+
 	dataBytes, _ := json.Marshal(c)
 
 	var data map[string]interface{}
 
-	if err := json.Unmarshal(dataBytes, &data); err != nil {
-		log.Println("JSON 解析錯誤：", err)
-		return
+	if errUnmarshal := json.Unmarshal(dataBytes, &data); errUnmarshal != nil {
+		return "", errUnmarshal
 	}
 
 	dataValue, ok := data["data"]
 	if !ok {
-		log.Println("未找到 'data' key")
-		return
+		return "", errors.New("未找到 'data' key")
 	}
 
-	r1, err := json.Marshal(dataValue)
-	if err != nil {
-		log.Println("JSON 編碼錯誤：", err)
-		return
+	r1, errMarshal := json.Marshal(dataValue)
+	if errMarshal != nil {
+		return "", errMarshal
 	}
 
 	var data2 map[string]interface{}
 
-	if err := json.Unmarshal(r1, &data2); err != nil {
-		log.Println("JSON 解析錯誤：", err)
-		return
+	if errUnmarshal2 := json.Unmarshal(r1, &data2); errUnmarshal2 != nil {
+		return "", errUnmarshal2
 	}
 
-	location, err := time.LoadLocation("UTC")
-	if err != nil {
-		log.Println("Error loading time zone:", err)
-		return
+	location, errLocation := time.LoadLocation("UTC")
+	if errLocation != nil {
+		return "", errLocation
 	}
 
 	existTimeStamp := gjson.Get(string(dataBytes), "data.samples.0.timestamp")
@@ -298,15 +294,14 @@ func removeMapKeyRemoteWrite(c InsertData) (r string) {
 		data2["@timestamp"] = c.Timestamp
 	}
 
-	result, err := json.Marshal(data2)
-	if err != nil {
-		log.Println("JSON 編碼錯誤：", err)
-		return
+	result, errMarshal2 := json.Marshal(data2)
+	if errMarshal2 != nil {
+		return "", errMarshal2
 	}
 
 	// log.Println("data result: ", string(result))
 
-	return string(result)
+	return string(result), nil
 
 }
 
@@ -356,7 +351,10 @@ func BulkCreateRemoteWrite(index string, data map[string]interface{}) (result st
 
 	ContentDetail1 := contentDetailCreate(data)
 
-	c := removeMapKeyRemoteWrite(ContentDetail1)
+	c, err := removeMapKeyRemoteWrite(ContentDetail1)
+	if err != nil {
+		return "", err
+	}
 	// log.Println("c: ", c)
 
 	r = dataMix(r, Action, c)
