@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -254,15 +255,7 @@ func removeMapKey(c InsertData) (r string) {
 
 func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 
-	defer func() {
-		if r := recover(); r != nil {
-
-			log.Println("panic_InsertData: ", string(c.Data), c.Timestamp)
-
-			fmt.Println("Recovered from panic in processInsert, ", r)
-			return
-		}
-	}()
+	data2 := make(map[string]interface{})
 
 	dataBytes, _ := json.Marshal(c)
 
@@ -285,8 +278,6 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 
 		return "", errMarshal
 	}
-
-	data2 := make(map[string]interface{})
 
 	if errUnmarshal2 := json.Unmarshal(r1, &data2); errUnmarshal2 != nil {
 		log.Println("removeMapKeyRemoteWrite Unmarshal2 error: ", errUnmarshal2)
@@ -316,6 +307,19 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 
 		return "", errMarshal2
 	}
+
+	defer func() {
+		if r := recover(); r != nil {
+
+			log.Println("panic_InsertData2: ", data2)
+			log.Println("panic_InsertDataValue: ", dataValue)
+
+			fmt.Println("Recovered from panic in processInsert, ", r)
+
+			debug.PrintStack()
+			return
+		}
+	}()
 
 	// log.Println("data result: ", string(result))
 
