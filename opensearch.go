@@ -317,6 +317,11 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 		}
 	}()
 
+	dataValue = nil
+	data2 = nil
+	data = nil
+	r1 = nil
+
 	// log.Println("data result: ", string(result))
 
 	return string(result), nil
