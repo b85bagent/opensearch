@@ -40,7 +40,7 @@ func contentDetailUpdate(data InsertData) UpdateData {
 }
 
 //把data 轉成 字串
-func DataCompression(data map[string]interface{}, index string) string {
+func DataCompressionRemoteWrite(data map[string]interface{}, index string) string {
 
 	if len(data) == 0 {
 		return ""
@@ -49,6 +49,23 @@ func DataCompression(data map[string]interface{}, index string) string {
 	index = indexRegexp(index)
 
 	result, err := BulkCreateRemoteWrite(index, data)
+	if err != nil {
+		log.Println("Bulk Create error: ", err)
+		return ""
+	}
+
+	return result
+}
+
+func DataCompression(data map[string]interface{}, index string) string {
+
+	if len(data) == 0 {
+		return ""
+	}
+
+	index = indexRegexp(index)
+
+	result, err := BulkCreate(index, data)
 	if err != nil {
 		log.Println("Bulk Create error: ", err)
 		return ""
