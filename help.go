@@ -39,7 +39,7 @@ func contentDetailUpdate(data InsertData) UpdateData {
 	return UpdateData{Doc: data}
 }
 
-//把data 轉成 字串
+// 把data 轉成 字串
 func DataCompressionRemoteWrite(data map[string]interface{}, index string) string {
 
 	if len(data) == 0 {
@@ -75,8 +75,7 @@ func DataCompression(data map[string]interface{}, index string) string {
 }
 
 func indexRegexp(index string) string {
-
-	pattern := `%\{YYYY([-.\/]MM([-.\/]DD)?)?\}`
+	pattern := `%\{YYYY([-.\/]M{1,2}([-.\/]D{1,2})?)?\}`
 
 	// 編譯正則表達式
 	re, _ := regexp.Compile(pattern)
@@ -105,11 +104,19 @@ func indexRegexp(index string) string {
 
 		// 獲取日期格式
 		if hasSeparator {
-			switch strings.Count(datePart, separator) {
+			switch strings.Count(datePart, "M") {
 			case 1:
-				layout = "2006" + separator + "01"
+				if strings.Count(datePart, "D") == 1 {
+					layout = "2006" + separator + "1" + separator + "2"
+				} else {
+					layout = "2006" + separator + "1"
+				}
 			case 2:
-				layout = "2006" + separator + "01" + separator + "02"
+				if strings.Count(datePart, "D") == 1 {
+					layout = "2006" + separator + "01" + separator + "2"
+				} else {
+					layout = "2006" + separator + "01"
+				}
 			}
 		} else {
 			layout = "2006"
