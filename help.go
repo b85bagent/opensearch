@@ -2,8 +2,10 @@ package opensearch
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -77,7 +79,7 @@ func DataCompression(data map[string]interface{}, index string) string {
 func indexRegexp(index string) string {
 	pattern := `%\{YYYY([-.\/]M{1,2}([-.\/]D{1,2})?)?\}`
 
-	// 編譯正則表達式
+	// 編籍正則表達式
 	re, _ := regexp.Compile(pattern)
 
 	// 檢查這個參數是否符合正則表達式的模式
@@ -85,7 +87,6 @@ func indexRegexp(index string) string {
 
 	if len(matches) > 0 {
 		// 基於匹配的字符串決定需要的日期格式
-		var layout string
 		var separator string
 		hasSeparator := false
 
@@ -102,31 +103,37 @@ func indexRegexp(index string) string {
 			hasSeparator = true
 		}
 
+		// 獲取當前的日期
+		currentDate := time.Now()
+
 		// 獲取日期格式
+		var year, month, day string
 		if hasSeparator {
-			switch strings.Count(datePart, "M") {
-			case 1:
-				if strings.Count(datePart, "D") == 1 {
-					layout = "2006" + separator + "1" + separator + "2"
-				} else {
-					layout = "2006" + separator + "1"
-				}
-			case 2:
-				if strings.Count(datePart, "D") == 1 {
-					layout = "2006" + separator + "01" + separator + "2"
-				} else {
-					layout = "2006" + separator + "01"
-				}
+			year = strconv.Itoa(currentDate.Year())
+
+			if strings.Count(datePart, "M") == 1 {
+				month = strconv.Itoa(int(currentDate.Month()))
+			} else {
+				month = fmt.Sprintf("%02d", currentDate.Month())
+			}
+
+			if strings.Count(datePart, "D") == 1 {
+				day = strconv.Itoa(currentDate.Day())
+			} else {
+				day = fmt.Sprintf("%02d", currentDate.Day())
 			}
 		} else {
-			layout = "2006"
+			year = strconv.Itoa(currentDate.Year())
 		}
 
-		// 獲取當前的日期
-		currentDate := time.Now().Format(layout)
-
-		// 將匹配的部分替換為當天的日期
-		index = re.ReplaceAllString(index, currentDate)
+		// 根據日期部分的格式，組合出最終的日期
+		if strings.Contains(datePart, "D") {
+			index = re.ReplaceAllString(index, year+separator+month+separator+day)
+		} else if strings.Contains(datePart, "M") {
+			index = re.ReplaceAllString(index, year+separator+month)
+		} else {
+			index = re.ReplaceAllString(index, year)
+		}
 	}
 
 	return index
