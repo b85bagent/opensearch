@@ -23,6 +23,17 @@ func actionCreate(index string) ActionCreate {
 }
 
 func contentDetailCreate(data map[string]interface{}) InsertData {
+	// 嘗試從data中提取time_received_ns
+	if source, ok := data["_source"].(map[string]interface{}); ok {
+		if timeReceived, ok := source["time_received_ns"].(int64); ok {
+			// 轉換time_received_ns（納秒）為RFC3339格式並返回
+			timestamp := time.Unix(0, timeReceived).Format("2006-01-02T15:04:05.000Z")
+			dataBytes, _ := json.Marshal(data)
+			return InsertData{Data: json.RawMessage(dataBytes), Timestamp: timestamp}
+		}
+	}
+
+	// 如果time_received_ns不存在，則使用當前時間作為timestamp
 	t := time.Now().In(time.FixedZone("UTC+0", 0))
 	timestamp := t.Format("2006-01-02T15:04:05.000Z")
 	dataBytes, _ := json.Marshal(data)
