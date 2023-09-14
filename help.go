@@ -2,10 +2,8 @@ package opensearch
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -59,7 +57,7 @@ func DataCompressionRemoteWrite(data map[string]interface{}, index string) strin
 		return ""
 	}
 
-	index = indexRegexp(index)
+	index = IndexRegexp(index)
 
 	result, err := BulkCreateRemoteWrite(index, data)
 	if err != nil {
@@ -76,7 +74,7 @@ func DataCompression(data map[string]interface{}, index string) string {
 		return ""
 	}
 
-	index = indexRegexp(index)
+	index = IndexRegexp(index)
 
 	result, err := BulkCreate(index, data)
 	if err != nil {
@@ -87,65 +85,60 @@ func DataCompression(data map[string]interface{}, index string) string {
 	return result
 }
 
-func indexRegexp(index string) string {
-	pattern := `%\{YYYY([-.\/]M{1,2}([-.\/]D{1,2})?)?\}`
+func IndexRegexp(index string) string {
 
-	// 編籍正則表達式
+	pattern := `YYYY(([-./]))?(MM)?(M)?(([-./]))?(DD)?(D)?`
+
+	// 編譯正則表達式
 	re, _ := regexp.Compile(pattern)
 
 	// 檢查這個參數是否符合正則表達式的模式
 	matches := re.FindStringSubmatch(index)
 
 	if len(matches) > 0 {
-		// 基於匹配的字符串決定需要的日期格式
-		var separator string
-		hasSeparator := false
+		// 根據匹配的字符串決定需要的日期格式
+		var layout strings.Builder
 
-		// 獲取日期部分和分隔符
-		datePart := strings.Trim(matches[0], "%{}")
-		if strings.Contains(datePart, "-") {
-			separator = "-"
-			hasSeparator = true
-		} else if strings.Contains(datePart, ".") {
-			separator = "."
-			hasSeparator = true
-		} else if strings.Contains(datePart, "/") {
-			separator = "-"
-			hasSeparator = true
-		}
+		// 用於年份的格式
+		layout.WriteString("2006")
 
-		// 獲取當前的日期
-		currentDate := time.Now()
-
-		// 獲取日期格式
-		var year, month, day string
-		if hasSeparator {
-			year = strconv.Itoa(currentDate.Year())
-
-			if strings.Count(datePart, "M") == 1 {
-				month = strconv.Itoa(int(currentDate.Month()))
-			} else {
-				month = fmt.Sprintf("%02d", currentDate.Month())
+		// 如果有匹配到月份
+		if matches[3] != "" || matches[4] != "" {
+			separator := matches[2] //獲取分隔符
+			//如果分隔符是 / 把他替換掉
+			if separator == "/" {
+				separator = "-"
 			}
 
-			if strings.Count(datePart, "D") == 1 {
-				day = strconv.Itoa(currentDate.Day())
+			if matches[3] != "" {
+				layout.WriteString(separator + "01")
 			} else {
-				day = fmt.Sprintf("%02d", currentDate.Day())
+				layout.WriteString(separator + "1")
 			}
-		} else {
-			year = strconv.Itoa(currentDate.Year())
 		}
 
-		// 根據日期部分的格式，組合出最終的日期
-		if strings.Contains(datePart, "D") {
-			index = re.ReplaceAllString(index, year+separator+month+separator+day)
-		} else if strings.Contains(datePart, "M") {
-			index = re.ReplaceAllString(index, year+separator+month)
-		} else {
-			index = re.ReplaceAllString(index, year)
+		// 如果有匹配到日期
+		if matches[7] != "" || matches[8] != "" {
+			separator := matches[6] //獲取分隔符
+			//如果分隔符是 / 把他替換掉
+			if separator == "/" {
+				separator = "-"
+			}
+
+			if matches[7] != "" {
+				layout.WriteString(separator + "02")
+			} else {
+				layout.WriteString(separator + "2")
+			}
 		}
+
+		currentDate := time.Now().Format(layout.String())
+
+		// 將匹配的部分替換為當前的日期
+		index = re.ReplaceAllString(index, currentDate)
 	}
+
+	// 輸出結果
 
 	return index
 }
