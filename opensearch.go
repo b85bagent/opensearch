@@ -5,13 +5,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/opensearch-project/opensearch-go"
 	"github.com/opensearch-project/opensearch-go/opensearchapi"
 	"github.com/tidwall/gjson"
+)
+
+var (
+	dataInsertMutex sync.Mutex
 )
 
 func removeMapKey(c InsertData) (r string) {
@@ -216,7 +222,7 @@ func BulkCreateRemoteWrite(index string, data map[string]interface{}) (result st
 
 }
 
-//Bulk Execute
+// Bulk Execute
 func BulkExecute(client *opensearch.Client, documents string) (result *opensearchapi.Response, err error) {
 
 	// log.Println("documents: ", documents)
@@ -236,4 +242,44 @@ func BulkExecute(client *opensearch.Client, documents string) (result *opensearc
 	}
 
 	return blk, nil
+}
+
+func BulkInsert(data string, client *opensearch.Client) error {
+	dataInsertMutex.Lock()
+	defer dataInsertMutex.Unlock()
+
+	result, err := BulkExecute(client, data)
+	if err != nil {
+		log.Println("BulkExecute error: ", err)
+		return err
+	}
+
+	defer result.Body.Close()
+
+	body, err := io.ReadAll(result.Body)
+	if err != nil {
+		log.Println("result.IsError ReadAll error: ", err)
+
+		return err
+	}
+
+	var (
+		e               error
+		errType, reason string
+	)
+
+	gjson.Get(string(body), "items.#.create.error.reason").ForEach(func(_, value gjson.Result) bool {
+		if value.String() != "" {
+			errType = gjson.Get(string(body), "items.#.create.error.type").String()
+			reason = gjson.Get(string(body), "items.#.create.error.reason").String()
+			e = errors.New("Insert error: " + errType + ": " + reason)
+		}
+		return true // keep iterating
+	})
+
+	if e != nil {
+		return e
+	}
+
+	return nil
 }
