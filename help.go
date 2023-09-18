@@ -41,7 +41,7 @@ func contentDetailCreate(data map[string]interface{}) InsertData {
 	}
 
 	dataBytes, _ := json.Marshal(data)
-	return InsertData{Data: json.RawMessage(dataBytes), Timestamp: ㄔㄛ}
+	return InsertData{Data: json.RawMessage(dataBytes), Timestamp: timestamp}
 }
 
 func actionDelete(index, id string) ActionDelete {
