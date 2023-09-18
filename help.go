@@ -23,15 +23,11 @@ func actionCreate(index string) ActionCreate {
 func contentDetailCreate(data map[string]interface{}) InsertData {
 	var timestamp string
 
-	// Check if _source has timestamp, and if it does, use it.
-	if source, ok := data["_source"].(map[string]interface{}); ok {
-		// Check for the existence of timestamp in _source
-		if ts, ok := source["timestamp"].(string); ok {
-			timestamp = ts
-		} else if timeReceived, ok := source["time_received_ns"].(int64); ok {
-			// If timestamp does not exist, but time_received_ns does, convert it to RFC3339 format
-			timestamp = time.Unix(0, timeReceived).Format("2006-01-02T15:04:05.000Z")
-		}
+	if ts, ok := data["time"].(string); ok { // check for LokiReceiver
+		timestamp = ts
+	} else if timeReceived, ok := data["time_received_ns"].(int64); ok {
+		// If timestamp does not exist, but time_received_ns does, convert it to RFC3339 format
+		timestamp = time.Unix(0, timeReceived).Format("2006-01-02T15:04:05.000Z")
 	}
 
 	// If neither timestamp nor time_received_ns exists, use the current time as the timestamp
