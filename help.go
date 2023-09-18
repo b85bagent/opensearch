@@ -92,7 +92,7 @@ func DataCompression(data map[string]interface{}, index string) string {
 
 func IndexRegexp(index string) string {
 
-	pattern := `YYYY(([-./]))?(MM)?(M)?(([-./]))?(DD)?(D)?`
+	pattern := `%{YYYY(([-./]))?(MM)?(M)?(([-./]))?(DD)?(D)?}`
 
 	// 編譯正則表達式
 	re, _ := regexp.Compile(pattern)
