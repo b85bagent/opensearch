@@ -23,7 +23,7 @@ func actionCreate(index string) ActionCreate {
 func contentDetailCreate(data map[string]interface{}) InsertData {
 	var timestamp string
 
-	if ts, ok := data["time"].(string); ok { // check for LokiReceiver
+	if ts, ok := data["timestamp"].(string); ok { // check for LokiReceiver
 		timestamp = ts
 	} else if timeReceived, ok := data["time_received_ns"].(int64); ok {
 		// If timestamp does not exist, but time_received_ns does, convert it to RFC3339 format
