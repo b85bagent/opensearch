@@ -20,7 +20,8 @@ func actionCreate(index string) ActionCreate {
 	return ActionCreate{Create: IndexDetail{Index: index}}
 }
 
-func contentDetailCreate(data map[string]interface{}) InsertData {
+func contentDetailCreate(data map[string]interface{}) map[string]interface{} {
+
 	var timestamp string
 	if ts, ok := data["time"].(string); ok { // check for LokiReceiver
 		timestamp = ts
@@ -39,8 +40,9 @@ func contentDetailCreate(data map[string]interface{}) InsertData {
 		timestamp = t.Format("2006-01-02T15:04:05.000Z")
 	}
 
-	dataBytes, _ := json.Marshal(data)
-	return InsertData{Data: json.RawMessage(dataBytes), Timestamp: timestamp}
+	data["@timestamp"] = timestamp
+
+	return data
 }
 
 func actionDelete(index, id string) ActionDelete {
@@ -146,4 +148,31 @@ func IndexRegexp(index string) string {
 	// 輸出結果
 
 	return index
+}
+
+func isJSON(s string) bool {
+	var js map[string]interface{}
+	return json.Unmarshal([]byte(s), &js) == nil
+}
+
+func convertToMap(value string) (map[string]interface{}, error) {
+	var result map[string]interface{}
+	err := json.Unmarshal([]byte(value), &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+// 在将数据放入data之前调用这个函数
+func preprocessData(data map[string]interface{}) {
+	for k, v := range data {
+		if strVal, ok := v.(string); ok {
+			if isJSON(strVal) {
+				if newMap, err := convertToMap(strVal); err == nil {
+					data[k] = newMap
+				}
+			}
+		}
+	}
 }

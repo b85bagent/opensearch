@@ -21,37 +21,9 @@ var (
 )
 
 func removeMapKey(c InsertData) (r string) {
-	dataBytes, _ := json.Marshal(c)
+	c.Data["@timestamp"] = c.Timestamp
 
-	var data map[string]interface{}
-
-	if err := json.Unmarshal(dataBytes, &data); err != nil {
-		log.Println("JSON 解析錯誤：", err)
-		return
-	}
-
-	dataValue, ok := data["data"]
-	if !ok {
-		log.Println("未找到 'data' key")
-		return
-	}
-
-	r1, err := json.Marshal(dataValue)
-	if err != nil {
-		log.Println("JSON 編碼錯誤：", err)
-		return
-	}
-
-	var data2 map[string]interface{}
-
-	if err := json.Unmarshal(r1, &data2); err != nil {
-		log.Println("JSON 解析錯誤：", err)
-		return
-	}
-
-	data2["@timestamp"] = c.Timestamp
-
-	result, err := json.Marshal(data2)
+	result, err := json.Marshal(c.Data)
 	if err != nil {
 		log.Println("JSON 編碼錯誤：", err)
 		return
@@ -61,19 +33,18 @@ func removeMapKey(c InsertData) (r string) {
 
 }
 
-func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
-
-	data2 := make(map[string]interface{})
-
-	dataBytes, _ := json.Marshal(c)
-
-	var data map[string]interface{}
-
-	if errUnmarshal := json.Unmarshal(dataBytes, &data); errUnmarshal != nil {
-		log.Println("removeMapKeyRemoteWrite Unmarshal error: ", errUnmarshal)
-
-		return "", errUnmarshal
+func flattenData(data map[string]interface{}) map[string]interface{} {
+	if innerData, ok := data["data"].(map[string]interface{}); ok {
+		for k, v := range innerData {
+			data[k] = v
+		}
+		delete(data, "data")
 	}
+	return data
+}
+
+func removeMapKeyRemoteWrite(data map[string]interface{}) (r string, err error) {
+	data2 := make(map[string]interface{})
 
 	dataValue, ok := data["data"]
 	if !ok {
@@ -83,7 +54,6 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 	r1, errMarshal := json.Marshal(dataValue)
 	if errMarshal != nil {
 		log.Println("removeMapKeyRemoteWrite Marshal error: ", errMarshal)
-
 		return "", errMarshal
 	}
 
@@ -98,9 +68,9 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 		return "", errLocation
 	}
 
-	existTimeStamp := gjson.Get(string(dataBytes), "data.samples.0.timestamp")
+	existTimeStamp := gjson.Get(string(r1), "samples.0.timestamp")
 	if existTimeStamp.Exists() {
-		timestampMillis := existTimeStamp.Int() // 獲取時間戳（毫秒）
+		timestampMillis := existTimeStamp.Int()
 		timestampSeconds := timestampMillis / 1000
 		timestamp := time.Unix(timestampSeconds, 0).In(location)
 		formattedTimestamp := timestamp.Format("2006-01-02T15:04:05.000Z")
@@ -110,66 +80,45 @@ func removeMapKeyRemoteWrite(c InsertData) (r string, err error) {
 	result, errMarshal2 := json.Marshal(data2)
 	if errMarshal2 != nil {
 		log.Println("removeMapKeyRemoteWrite Marshal2 error: ", errMarshal2)
-
 		return "", errMarshal2
 	}
 
 	defer func() {
 		if r := recover(); r != nil {
-
 			log.Println("panic_InsertData2: ", data2)
 			log.Println("panic_InsertDataValue: ", dataValue)
-
 			fmt.Println("Recovered from panic in processInsert, ", r)
-
-			return
 		}
 	}()
 
-	dataValue = nil
-	data2 = nil
-	data = nil
-	r1 = nil
-
-	// log.Println("data result: ", string(result))
-
 	return string(result), nil
-
 }
 
 func BulkCreate(index string, data map[string]interface{}) (result string, err error) {
 
+	preprocessData(data)
+
+	data = flattenData(data) // 调用flattenData函数来修改数据结构
+
 	r := []interface{}{}
 
 	Action := actionCreate(index)
+	r = append(r, Action)
 
 	ContentDetail1 := contentDetailCreate(data)
-
-	c := removeMapKey(ContentDetail1)
-	// log.Println("c: ", c)
-
-	r = dataMix(r, Action, c)
-	// log.Println("r: ", r)
+	// ContentDetail1 已經是一個準備好的 map[string]interface{}，所以不再需要 removeMapKey
+	r = append(r, ContentDetail1)
 
 	buf := &bytes.Buffer{}
-
 	for _, v := range r {
 		jsonBytes, err := json.Marshal(v)
 		if err != nil {
 			log.Println("JSON 編碼錯誤：", err)
 			return "", err
 		}
-		// 移除反斜線
-		jsonString := strings.Replace(string(jsonBytes), "\\", "", -1)
-		// 移除前後的雙引號
-		jsonString = strings.TrimPrefix(jsonString, `"`)
-		jsonString = strings.TrimSuffix(jsonString, `"`)
-
-		buf.WriteString(jsonString)
+		buf.Write(jsonBytes)
 		buf.WriteByte('\n')
 	}
-
-	// log.Println("buf.String(): ", buf.String())
 
 	return buf.String(), nil
 
@@ -264,16 +213,19 @@ func BulkInsert(data string, client *opensearch.Client) error {
 	}
 
 	var (
-		e               error
-		errType, reason string
+		e                        error
+		errType, reason, Creason string
 	)
 
 	gjson.Get(string(body), "items.#.create.error.reason").ForEach(func(_, value gjson.Result) bool {
 		if value.String() != "" {
+
 			errType = gjson.Get(string(body), "items.#.create.error.type").String()
 			reason = gjson.Get(string(body), "items.#.create.error.reason").String()
-			e = errors.New("Insert error: " + errType + ": " + reason)
+			Creason = gjson.Get(string(body), "items.#.create.error.caused_by.reason").String()
+			e = errors.New("Insert error: " + errType + "_" + reason + ": " + Creason)
 		}
+		fmt.Println("error result: ", string(body))
 		return true // keep iterating
 	})
 

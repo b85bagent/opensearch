@@ -1,7 +1,6 @@
 package opensearch
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -106,7 +105,7 @@ type IndexDetail struct {
 	Index string `json:"_index"`
 }
 
-//若有其他content需求 改這邊
+// 若有其他content需求 改這邊
 type ContentDetail struct {
 	Host string `json:"host"`
 	HTTP struct {
@@ -123,8 +122,8 @@ type ContentDetail struct {
 }
 
 type InsertData struct {
-	Timestamp string          `json:"@timestamp"`
-	Data      json.RawMessage `json:"data"`
+	Timestamp string                 `json:"@timestamp"`
+	Data      map[string]interface{} `json:"data"`
 }
 
 type UpdateData struct {
