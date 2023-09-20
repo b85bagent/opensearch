@@ -225,7 +225,6 @@ func BulkInsert(data string, client *opensearch.Client) error {
 			Creason = gjson.Get(string(body), "items.#.create.error.caused_by.reason").String()
 			e = errors.New("Insert error: " + errType + "_" + reason + ": " + Creason)
 		}
-		fmt.Println("error result: ", string(body))
 		return true // keep iterating
 	})
 
